@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
-mongoose.connect(process.env.MONGOURL).then(() => {
+mongoose.connect(process.env.MONGOURL, {
+    dbName: 'blinkitapp'
+}).then(() => {
     console.log("Connected to MongoDB");
 });
 
