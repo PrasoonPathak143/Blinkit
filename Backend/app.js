@@ -31,3 +31,5 @@ app.use('/admin', adminRouter);
 app.use('/products', productRouter);
 
 app.listen(3000);
+
+// MONGOURL=mongodb+srv://prasoonpathakdev:XZoJ9UWjta7eFhxU@blinkit.j3mpx4l.mongodb.net/?retryWrites=true&w=majority&appName=BlinkIt

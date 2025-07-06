@@ -3,6 +3,7 @@ const router = express.Router();
 const {adminModel} = require('../models/admin');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const {productModel} = require('../models/product');
 const validateAdmin = require('../middlewares/admin');
 require('dotenv').config();
 
@@ -52,6 +53,30 @@ router.post('/login', async (req, res) => {
 
 router.get('/dashboard', validateAdmin, (req, res) => {
     res.render('admin_dashboard');
+});
+
+router.get('/products', validateAdmin, async (req, res) => {
+    const result = await productModel.aggregate([
+        {
+            $group: {
+                _id: "$category",
+                products: { $push: "$$ROOT" },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                category: "$_id",
+                products: { $slice: ["$products", 10] } // Limit to 10 products per category
+            }
+        }
+    ]);
+
+    const products = result.reduce((acc, item) => {
+        acc[item.category] = item.products;
+        return acc;
+    }, {});
+    res.render('admin_products', { products });
 });
 
 router.get('/logout', (req, res) => {
