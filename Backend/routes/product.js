@@ -3,6 +3,7 @@ const router = express.Router();
 const { productModel, validateProduct } = require('../models/product');
 const { categoryModel, validateCategory } = require('../models/category');
 const upload = require('../config/multer_config');
+const validateAdmin = require('../middlewares/admin');
 
 router.get('/', async (req, res) => {
     try {
@@ -40,6 +41,29 @@ router.post('/', upload.single("image"), async (req, res) => {
     catch (err) {
         res.send(err.message);
     }
+});
+
+router.get('/delete/:id', validateAdmin, async (req, res) => {
+    if(req.user.admin){
+        let product = await productModel.findOneAndDelete({_id: req.params.id});
+        console.log(product);
+        return res.redirect("/admin/products");
+    }
+    else{
+        res.send("You are not authorized to delete this product.");
+    }
+    
+});
+router.post('/delete', validateAdmin, async (req, res) => {
+    if(req.user.admin){
+        let product = await productModel.findOneAndDelete({_id: req.body.product_id});
+        console.log(product);
+        return res.redirect("/admin/products");
+    }
+    else{
+        res.send("You are not authorized to delete this product.");
+    }
+    
 });
 
 module.exports = router;

@@ -3,6 +3,8 @@ const app = express();
 const indexRouter = require('./routes/index');     // can also use (./routes) as index is the default file
 const authRouter = require('./routes/auth');       
 const expressSession = require('express-session');
+const categoryRouter = require('./routes/category');
+const userRouter = require('./routes/user');
 const path = require('path');
 require('dotenv').config();
 require('./config/google_oauth_config');
@@ -29,6 +31,8 @@ app.use("/", indexRouter);
 app.use('/auth', authRouter);
 app.use('/admin', adminRouter);
 app.use('/products', productRouter);
+app.use('/categories', categoryRouter);
+app.use('/users', userRouter);
 
 app.listen(3000);
 
