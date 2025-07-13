@@ -3,6 +3,8 @@ const router = express.Router();
 const {adminModel} = require('../models/admin');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const {productModel} = require('../models/product');
+const {categoryModel} = require('../models/category');
 const validateAdmin = require('../middlewares/admin');
 require('dotenv').config();
 
@@ -19,7 +21,7 @@ if(typeof process.env.NODE_ENV !== undefined && process.env.NODE_ENV === 'DEVELO
             role:"admin",
         });
         await user.save();
-        let token = jwt.sign({email: user.email}, process.env.JWT_KEY);
+        let token = jwt.sign({email: user.email, admin: true}, process.env.JWT_KEY);
         res.cookie("token", token);
         res.send("Admin created successfully");
     }
@@ -44,14 +46,40 @@ router.post('/login', async (req, res) => {
         return res.send("Invalid password");
     }
     else{
-        let token = jwt.sign({email: admin.email}, process.env.JWT_KEY);
+        let token = jwt.sign({email: admin.email, admin: true}, process.env.JWT_KEY);
         res.cookie("token", token);
         res.redirect('/admin/dashboard');
     }
 });
 
-router.get('/dashboard', validateAdmin, (req, res) => {
-    res.render('admin_dashboard');
+router.get('/dashboard', validateAdmin, async (req, res) => {
+    let prodcount = await productModel.countDocuments();
+    let categcount = await categoryModel.countDocuments();
+    res.render('admin_dashboard', {prodcount, categcount});
+});
+
+router.get('/products', validateAdmin, async (req, res) => {
+    const result = await productModel.aggregate([
+        {
+            $group: {
+                _id: "$category",
+                products: { $push: "$$ROOT" },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                category: "$_id",
+                products: { $slice: ["$products", 10] } // Limit to 10 products per category
+            }
+        }
+    ]);
+
+    const products = result.reduce((acc, item) => {
+        acc[item.category] = item.products;
+        return acc;
+    }, {});
+    res.render('admin_products', { products });
 });
 
 router.get('/logout', (req, res) => {
